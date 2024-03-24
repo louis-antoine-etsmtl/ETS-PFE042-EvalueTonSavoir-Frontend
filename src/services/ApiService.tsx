@@ -37,7 +37,7 @@ class ApiService {
 
         const object = {
             token: token,
-            expiry: now.getTime()+this.TTL
+            expiry: now.getTime() + this.TTL
         }
 
         localStorage.setItem("jwt", JSON.stringify(object));
@@ -97,7 +97,7 @@ class ApiService {
             const headers = this.constructRequestHeaders();
             const body = { email, password };
 
-            const result: AxiosResponse = await axios.post(url, body, headers);
+            const result: AxiosResponse = await axios.post(url, body, { headers: headers });
 
             if (result.status !== 200) {
                 throw new Error(`L'enregistrement a échoué. Status: ${result.status}`);
@@ -133,13 +133,13 @@ class ApiService {
             const headers = this.constructRequestHeaders();
             const body = { email, password };
 
-            const result: AxiosResponse = await axios.post(url, body, headers);
+            const result: AxiosResponse = await axios.post(url, body, { headers: headers });
 
             if (result.status !== 200) {
                 throw new Error(`La connexion a échoué. Status: ${result.status}`);
             }
 
-            this.saveToken(result.data.results.token);
+            this.saveToken(result.data.token);
 
             return true;
 
@@ -171,7 +171,7 @@ class ApiService {
             const headers = this.constructRequestHeaders();
             const body = { email };
 
-            const result: AxiosResponse = await axios.post(url, body, headers);
+            const result: AxiosResponse = await axios.post(url, body, { headers: headers });
 
             if (result.status !== 200) {
                 throw new Error(`Échec de la réinitialisation du mot de passe. Status: ${result.status}`);
@@ -207,7 +207,7 @@ class ApiService {
             const headers = this.constructRequestHeaders();
             const body = { email, oldPassword, newPassword };
 
-            const result: AxiosResponse = await axios.post(url, body, headers);
+            const result: AxiosResponse = await axios.post(url, body, { headers: headers });
 
             if (result.status !== 200) {
                 throw new Error(`Le changement du mot de passe a échoué. Status: ${result.status}`);
@@ -243,7 +243,7 @@ class ApiService {
             const headers = this.constructRequestHeaders();
             const body = { email, password };
 
-            const result: AxiosResponse = await axios.post(url, body, headers);
+            const result: AxiosResponse = await axios.post(url, body, { headers: headers });
 
             if (result.status !== 200) {
                 throw new Error(`La supression du compte a échoué. Status: ${result.status}`);
@@ -281,14 +281,14 @@ class ApiService {
             const headers = this.constructRequestHeaders();
             const body = { title };
 
-            const result: AxiosResponse = await axios.post(url, body, headers);
+            const result: AxiosResponse = await axios.post(url, body, { headers: headers });
 
             if (result.status !== 200) {
                 throw new Error(`La création du dossier a échoué. Status: ${result.status}`);
             }
 
             return true;
-            
+
         } catch (error) {
             console.log("Error details: ", error);
 
@@ -314,14 +314,14 @@ class ApiService {
             const url: string = this.constructRequestUrl(`/folder/getUserFolders`);
             const headers = this.constructRequestHeaders();
 
-            const result: AxiosResponse = await axios.get(url, headers);
+            const result: AxiosResponse = await axios.get(url, { headers: headers });
 
             if (result.status !== 200) {
                 throw new Error(`L'obtention des dossiers utilisateur a échoué. Status: ${result.status}`);
             }
 
-            return result.data.results.map((folder: FolderType) => ({ _id: folder._id, title: folder.title }));
-            
+            return result.data.data.map((folder: FolderType) => ({ _id: folder._id, title: folder.title }));
+
         } catch (error) {
             console.log("Error details: ", error);
 
@@ -349,14 +349,14 @@ class ApiService {
             const url: string = this.constructRequestUrl(`/folder/getFolderContent/${folderId}`);
             const headers = this.constructRequestHeaders();
 
-            const result: AxiosResponse = await axios.get(url, headers);
+            const result: AxiosResponse = await axios.get(url, { headers: headers });
 
             if (result.status !== 200) {
                 throw new Error(`L'obtention des quiz du dossier a échoué. Status: ${result.status}`);
             }
 
-            return result.data.results.map((quiz: QuizType) => ({ _id: quiz._id, title: quiz.title, content: quiz.content }));
-            
+            return result.data.data.map((quiz: QuizType) => ({ _id: quiz._id, title: quiz.title, content: quiz.content }));
+
         } catch (error) {
             console.log("Error details: ", error);
 
@@ -384,7 +384,7 @@ class ApiService {
             const url: string = this.constructRequestUrl(`/folder/delete/${folderId}`);
             const headers = this.constructRequestHeaders();
 
-            const result: AxiosResponse = await axios.delete(url, headers);
+            const result: AxiosResponse = await axios.delete(url, { headers: headers });
 
             if (result.status !== 200) {
                 throw new Error(`La supression du dossier a échoué. Status: ${result.status}`);
@@ -420,14 +420,13 @@ class ApiService {
             const headers = this.constructRequestHeaders();
             const body = { folderId, newTitle };
 
-            const result: AxiosResponse = await axios.post(url, body, headers);
-
+            const result: AxiosResponse = await axios.put(url, body, { headers: headers });
             if (result.status !== 200) {
                 throw new Error(`Le changement de nom de dossier a échoué. Status: ${result.status}`);
             }
 
             return true;
-            
+
         } catch (error) {
             console.log("Error details: ", error);
 
@@ -441,15 +440,24 @@ class ApiService {
         }
     }
 
-    /**
-     * @remarks This function is not yet implemented.
-     * @returns true if successful 
-     * @returns A error string if unsuccessful,
-     */
-    public async duplicateFolder(folderId: string, newTitle: string): Promise<any> {
+    public async duplicateFolder(folderId: string): Promise<any> {
         try {
-            console.log(folderId, newTitle);
-            return "Route not implemented yet!";
+            if (!folderId) {
+                throw new Error(`Le folderId et le nouveau titre sont requis.`);
+            }
+
+            const url: string = this.constructRequestUrl(`/folder/duplicate`);
+            const headers = this.constructRequestHeaders();
+            const body = { folderId };
+
+            console.log(headers);
+            const result: AxiosResponse = await axios.post(url, body, { headers: headers });
+
+            if (result.status !== 200) {
+                throw new Error(`La duplication du dossier a échoué. Status: ${result.status}`);
+            }
+
+            return true;
 
         } catch (error) {
             console.log("Error details: ", error);
@@ -464,16 +472,24 @@ class ApiService {
         }
     }
 
-    /**
-     * @remarks This function is not yet implemented.
-     * @returns true if successful 
-     * @returns A error string if unsuccessful,
-     */
     public async copyFolder(folderId: string, newTitle: string): Promise<any> {
         try {
-            console.log(folderId, newTitle);
-            return "Route not implemented yet!";
-            
+            if (!folderId || !newTitle) {
+                throw new Error(`Le folderId et le nouveau titre sont requis.`);
+            }
+
+            const url: string = this.constructRequestUrl(`/folder/copy/${folderId}`);
+            const headers = this.constructRequestHeaders();
+            const body = { newTitle };
+
+            const result: AxiosResponse = await axios.post(url, body, { headers: headers });
+
+            if (result.status !== 200) {
+                throw new Error(`La copie du dossier a échoué. Status: ${result.status}`);
+            }
+
+            return true;
+
         } catch (error) {
             console.log("Error details: ", error);
 
@@ -502,16 +518,16 @@ class ApiService {
 
             const url: string = this.constructRequestUrl(`/quiz/create`);
             const headers = this.constructRequestHeaders();
-            const body = { title, content, folderId};
+            const body = { title, content, folderId };
 
-            const result: AxiosResponse = await axios.post(url, body, headers);
+            const result: AxiosResponse = await axios.post(url, body, { headers: headers });
 
             if (result.status !== 200) {
                 throw new Error(`La création du quiz a échoué. Status: ${result.status}`);
             }
 
             return true;
-            
+
         } catch (error) {
             console.log("Error details: ", error);
 
@@ -539,13 +555,13 @@ class ApiService {
             const url: string = this.constructRequestUrl(`/quiz/get/${quizId}`);
             const headers = this.constructRequestHeaders();
 
-            const result: AxiosResponse = await axios.get(url, headers);
+            const result: AxiosResponse = await axios.get(url, { headers: headers });
 
             if (result.status !== 200) {
                 throw new Error(`L'obtention du quiz a échoué. Status: ${result.status}`);
             }
 
-            return result.data.results as QuizType;
+            return result.data.data as QuizType;
 
         } catch (error) {
             console.log("Error details: ", error);
@@ -574,14 +590,14 @@ class ApiService {
             const url: string = this.constructRequestUrl(`/quiz/delete/${quizId}`);
             const headers = this.constructRequestHeaders();
 
-            const result: AxiosResponse = await axios.delete(url,headers);
+            const result: AxiosResponse = await axios.delete(url, { headers: headers });
 
             if (result.status !== 200) {
                 throw new Error(`La supression du quiz a échoué. Status: ${result.status}`);
             }
 
             return true;
-            
+
         } catch (error) {
             console.log("Error details: ", error);
 
@@ -608,16 +624,16 @@ class ApiService {
 
             const url: string = this.constructRequestUrl(`/quiz/update`);
             const headers = this.constructRequestHeaders();
-            const body = { quizId, newTitle, newContent};
+            const body = { quizId, newTitle, newContent };
 
-            const result: AxiosResponse = await axios.put(url, body, headers);
+            const result: AxiosResponse = await axios.put(url, body, { headers: headers });
 
             if (result.status !== 200) {
                 throw new Error(`La mise à jours du quiz a échoué. Status: ${result.status}`);
             }
 
             return true;
-            
+
         } catch (error) {
             console.log("Error details: ", error);
 
@@ -641,19 +657,19 @@ class ApiService {
             if (!quizId || !newFolderId) {
                 throw new Error(`Le quizId et le nouveau dossier sont requis.`);
             }
-
+            //console.log(quizId);
             const url: string = this.constructRequestUrl(`/quiz/move`);
             const headers = this.constructRequestHeaders();
-            const body = { quizId, newFolderId};
+            const body = { quizId, newFolderId };
 
-            const result: AxiosResponse = await axios.post(url, body, headers);
+            const result: AxiosResponse = await axios.put(url, body, { headers: headers });
 
             if (result.status !== 200) {
                 throw new Error(`Le déplacement du quiz a échoué. Status: ${result.status}`);
             }
 
             return true;
-            
+
         } catch (error) {
             console.log("Error details: ", error);
 
@@ -672,13 +688,23 @@ class ApiService {
      * @returns true if successful 
      * @returns A error string if unsuccessful,
      */
-    public async duplicateQuiz(quizId: string, newTitle: string, folderId: string): Promise<any> {
+    public async duplicateQuiz(quizId: string): Promise<any> {
+
+
+        const url: string = this.constructRequestUrl(`/quiz/duplicate`);
+        const headers = this.constructRequestHeaders();
+        const body = { quizId };
+
         try {
-            console.log(quizId, newTitle, folderId);
-            return "Route not implemented yet!";
-            
+            const result: AxiosResponse = await axios.post(url, body, { headers });
+
+            if (result.status !== 200) {
+                throw new Error(`La duplication du quiz a échoué. Status: ${result.status}`);
+            }
+
+            return result;
         } catch (error) {
-            console.log("Error details: ", error);
+            console.error("Error details: ", error);
 
             if (axios.isAxiosError(error)) {
                 const err = error as AxiosError;
@@ -686,8 +712,9 @@ class ApiService {
                 return data?.error || 'Erreur serveur inconnue lors de la requête.';
             }
 
-            return `Une erreur inattendue s'est produite.`
+            return `Une erreur inattendue s'est produite.`;
         }
+
     }
 
     /**
@@ -699,7 +726,7 @@ class ApiService {
         try {
             console.log(quizId, newTitle), folderId;
             return "Route not implemented yet!";
-            
+
         } catch (error) {
             console.log("Error details: ", error);
 
@@ -710,6 +737,95 @@ class ApiService {
             }
 
             return `Une erreur inattendue s'est produite.`
+        }
+    }
+
+    async ShareQuiz(quizId: string, email: string): Promise<any> {
+        try {
+            if (!quizId || !email) {
+                throw new Error(`quizId and email are required.`);
+            }
+
+            const url: string = this.constructRequestUrl(`/quiz/Share`);
+            const headers = this.constructRequestHeaders();
+            const body = { quizId, email };
+
+            const result: AxiosResponse = await axios.put(url, body, { headers: headers });
+
+            if (result.status !== 200) {
+                throw new Error(`Update and share quiz failed. Status: ${result.status}`);
+            }
+
+            return true;
+        } catch (error) {
+            console.log("Error details: ", error);
+
+            if (axios.isAxiosError(error)) {
+                const err = error as AxiosError;
+                const data = err.response?.data as { error: string } | undefined;
+                return data?.error || 'Unknown server error during request.';
+            }
+
+            return `An unexpected error occurred.`;
+        }
+    }
+
+    async getSharedQuiz(quizId: string): Promise<string> {
+        try {
+            if (!quizId) {
+                throw new Error(`quizId is required.`);
+            }
+
+            const url: string = this.constructRequestUrl(`/quiz/getShare/${quizId}`);
+            const headers = this.constructRequestHeaders();
+
+            const result: AxiosResponse = await axios.get(url, { headers: headers });
+
+            if (result.status !== 200) {
+                throw new Error(`Update and share quiz failed. Status: ${result.status}`);
+            }
+
+            return result.data.data;
+        } catch (error) {
+            console.log("Error details: ", error);
+
+            if (axios.isAxiosError(error)) {
+                const err = error as AxiosError;
+                const data = err.response?.data as { error: string } | undefined;
+                return data?.error || 'Unknown server error during request.';
+            }
+
+            return `An unexpected error occurred.`;
+        }
+    }
+
+    async receiveSharedQuiz(quizId: string, folderId: string): Promise<any> {
+        try {
+            if (!quizId || !folderId) {
+                throw new Error(`quizId and folderId are required.`);
+            }
+
+            const url: string = this.constructRequestUrl(`/quiz/receiveShare`);
+            const headers = this.constructRequestHeaders();
+            const body = { quizId, folderId };
+
+            const result: AxiosResponse = await axios.post(url, body, { headers: headers });
+
+            if (result.status !== 200) {
+                throw new Error(`Receive shared quiz failed. Status: ${result.status}`);
+            }
+
+            return true;
+        } catch (error) {
+            console.log("Error details: ", error);
+
+            if (axios.isAxiosError(error)) {
+                const err = error as AxiosError;
+                const data = err.response?.data as { error: string } | undefined;
+                return data?.error || 'Unknown server error during request.';
+            }
+
+            return `An unexpected error occurred.`;
         }
     }
 
@@ -742,7 +858,7 @@ class ApiService {
                 throw new Error(`L'enregistrement a échoué. Status: ${result.status}`);
             }
 
-            const id = result.data.results.id;
+            const id = result.data.id;
 
             return this.constructRequestUrl('/image/get/' + id);
 
@@ -752,10 +868,10 @@ class ApiService {
             if (axios.isAxiosError(error)) {
                 const err = error as AxiosError;
                 const data = err.response?.data as { error: string } | undefined;
-                return data?.error || 'Erreur serveur inconnue lors de la requête.';
+                return `ERROR : ${data?.error}` || 'ERROR : Erreur serveur inconnue lors de la requête.';
             }
 
-            return `Une erreur inattendue s'est produite.`
+            return `ERROR : Une erreur inattendue s'est produite.`
         }
     }
     // NOTE : Get Image pas necessaire
