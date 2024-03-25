@@ -202,7 +202,7 @@ const QuizForm: React.FC = () => {
                     <div className='images'>
                         <div className='upload'>
                             <label className="dropArea">
-                                <input type="file" id="file-input" className="file-input" accept="image/*" multiple />
+                                <input type="file" id="file-input" className="file-input" accept="image/jpeg" multiple />
                             </label>
 
                             <IconButton
