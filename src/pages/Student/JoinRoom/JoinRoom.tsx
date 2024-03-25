@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 
 import { Socket } from 'socket.io-client';
-// import { ENV_VARIABLES } from '../../../constants';
+import { ENV_VARIABLES } from '../../../constants';
 
 import StudentModeQuiz from '../../../components/StudentModeQuiz/StudentModeQuiz';
 import TeacherModeQuiz from '../../../components/TeacherModeQuiz/TeacherModeQuiz';
@@ -14,9 +14,6 @@ import { TextField } from '@mui/material';
 import LoadingButton from '@mui/lab/LoadingButton';
 
 import LoginContainer from '../../../components/LoginContainer/LoginContainer'
-
-import dotenv from 'dotenv';
-dotenv.config();
 
 const JoinRoom: React.FC = () => {
     const [roomName, setRoomName] = useState('');
@@ -37,7 +34,7 @@ const JoinRoom: React.FC = () => {
     }, []);
 
     const handleCreateSocket = () => {
-        const socket = webSocketService.connect(process.env.VITE_BACKEND_URL || "");
+        const socket = webSocketService.connect(ENV_VARIABLES.VITE_BACKEND_URL);
         socket.on('join-success', () => {
             setIsWaitingForTeacher(true);
             setIsConnecting(false);
