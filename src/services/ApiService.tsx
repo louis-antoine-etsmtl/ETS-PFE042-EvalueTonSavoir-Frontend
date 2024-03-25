@@ -1,15 +1,18 @@
 import axios, { AxiosError, AxiosResponse } from 'axios';
-import { ENV_VARIABLES } from '../constants';
+// import { ENV_VARIABLES } from '../constants';
 
 import { QuizType } from '../Types/QuizType';
 import { FolderType } from '../Types/FolderType';
+
+import dotenv from 'dotenv';
+dotenv.config();
 
 class ApiService {
     private BASE_URL: string;
     private TTL: number;
 
     constructor() {
-        this.BASE_URL = ENV_VARIABLES.VITE_BACKEND_URL;
+        this.BASE_URL = process.env.VITE_BACKEND_URL || "";
         this.TTL = 3600000; // 1h
     }
 
