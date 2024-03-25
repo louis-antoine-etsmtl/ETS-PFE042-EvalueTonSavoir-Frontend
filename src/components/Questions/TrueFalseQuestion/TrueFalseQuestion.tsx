@@ -1,5 +1,5 @@
 // TrueFalseQuestion.tsx
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Latex from 'react-latex';
 import '../questionStyle.css';
 import { Button } from '@mui/material';
@@ -15,7 +15,11 @@ interface Props {
 const TrueFalseQuestion: React.FC<Props> = (props) => {
     const { questionTitle, correctAnswer, showAnswer, handleOnSubmitAnswer, globalFeedback } =
         props;
-    const [answer, setAnswer] = useState<boolean>();
+    const [answer, setAnswer] = useState<boolean | undefined>(undefined);
+
+    useEffect(() => {
+        setAnswer(undefined);
+    }, [questionTitle]);
 
     const selectedTrue = answer ? 'selected' : '';
     const selectedFalse = answer !== undefined && !answer ? 'selected' : '';
@@ -31,7 +35,7 @@ const TrueFalseQuestion: React.FC<Props> = (props) => {
                     fullWidth
                 >
                     {showAnswer && (correctAnswer ? '✅' : '❌')}
-                    <div className={`circle ${selectedTrue}`}>T</div>
+                    <div className={`circle ${selectedTrue}`}>V</div>
                     <div className={`answer-text ${selectedTrue}`}>Vrai</div>
                 </Button>
                 <Button
