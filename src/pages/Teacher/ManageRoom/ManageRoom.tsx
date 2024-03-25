@@ -10,7 +10,7 @@ import webSocketService from '../../../services/WebsocketService';
 import { QuizType } from '../../../Types/QuizType';
 
 import './manageRoom.css';
-import { ENV_VARIABLES } from '../../../constants';
+// import { ENV_VARIABLES } from '../../../constants';
 import { UserType } from '../../../Types/UserType';
 import { Button } from '@mui/material';
 import LoadingCircle from '../../../components/LoadingCircle/LoadingCircle';
@@ -20,6 +20,9 @@ import DisconnectButton from '../../../components/DisconnectButton/DisconnectBut
 import QuestionNavigation from '../../../components/QuestionNavigation/QuestionNavigation';
 import Question from '../../../components/Questions/Question';
 import ApiService from '../../../services/ApiService';
+
+import dotenv from 'dotenv';
+dotenv.config();
 
 const ManageRoom: React.FC = () => {
     const navigate = useNavigate();
@@ -81,7 +84,7 @@ const ManageRoom: React.FC = () => {
 
     const createWebSocketRoom = () => {
         setConnectingError('');
-        const socket = webSocketService.connect(ENV_VARIABLES.VITE_BACKEND_URL);
+        const socket = webSocketService.connect(process.env.VITE_BACKEND_URL || "");
         console.log(socket);
         socket.on('connect', () => {
             webSocketService.createRoom();
