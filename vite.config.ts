@@ -7,5 +7,12 @@ export default defineConfig({
     plugins: [
         react(),
         pluginChecker({ typescript: true }),
-    ]
+    ],
+    build: {
+        rollupOptions: {
+            // Exclure env-config.js du processus de bundling
+            external: ['/env-config.js']
+        }
+    }
 });
+
