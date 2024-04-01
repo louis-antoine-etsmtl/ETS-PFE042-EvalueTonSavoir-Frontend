@@ -1,0 +1,13 @@
+version: '3.8'
+
+services:
+  frontend:
+    build: 
+      context: .
+    image: evaluetonsavoir/ets-pfe042-evaluetonsavoir-frontend:latest
+    ports:
+      - "5173:80"
+    environment:
+      - VITE_BACKEND_URL=http://10.196.10.69:3000
+      - VITE_AZURE_BACKEND_URL=http://10.196.10.69:4400
+

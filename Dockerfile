@@ -13,9 +13,6 @@ RUN npm install
 # Copier le reste des fichiers du projet dans le conteneur
 COPY . .
 
-# Créer le fichier .env avec les variables d'environnement nécessaires
-RUN echo "VITE_BACKEND_URL=http://10.196.10.69:4400/\nVITE_AZURE_BACKEND_URL=http://10.196.10.69:4400" > .env
-
 # Exécuter le script de build du projet
 RUN npm run build
 
