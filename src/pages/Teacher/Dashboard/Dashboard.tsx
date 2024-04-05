@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import React, { useState, useEffect, useMemo } from 'react';
 import { parse } from 'gift-pegjs';
 
-import Template from '../../../components/GiftTemplate/templates';
+import Template, { ErrorTemplate } from '../../../components/GiftTemplate/templates';
 import { QuizType } from '../../../Types/QuizType';
 import { FolderType } from '../../../Types/FolderType';
 import { QuestionService } from '../../../services/QuestionService';
@@ -11,6 +11,8 @@ import ApiService from '../../../services/ApiService';
 
 import './dashboard.css';
 import ImportModal from '../../../components/ImportModal/ImportModal';
+import { jsPDF } from 'jspdf';
+import html2canvas from 'html2canvas';
 //import axios from 'axios';
 
 import {
@@ -87,7 +89,7 @@ const Dashboard: React.FC = () => {
             if (selectedFolder == '') {
                 const folders = await ApiService.getUserFolders(); // HACK force user folders to load on first load
                 console.log("show all quizes")
-                var quizzes: QuizType[] = [];
+                let quizzes: QuizType[] = [];
 
                 for (const folder of folders as FolderType[]) {
                     const folderQuizzes = await ApiService.getFolderContent(folder._id);
@@ -248,6 +250,184 @@ const Dashboard: React.FC = () => {
             console.error('Error exporting selected quiz:', error);
         }
     };
+
+    /*const downloadPdfFile = async (quiz: QuizType) => {
+        try {
+            const selectedQuiz = await ApiService.getQuiz(quiz._id) as QuizType;
+            if (!selectedQuiz) {
+                throw new Error('Selected quiz not found');
+            }
+
+            let previewHTML = '';
+            const pdf = new jsPDF();
+            selectedQuiz.content.forEach((item) => {
+                const isImage = item.includes('<img');
+                if (isImage) {
+                    const imageUrlMatch = item.match(/<img[^>]+src="([^">]+)"/);
+                    if (imageUrlMatch && imageUrlMatch[1]) {
+                        // Extract the URL and create an image element
+                        const imageUrl = imageUrlMatch[1];
+                        previewHTML += `<img style="width:10vw;" src="${imageUrl}">`;
+                    }
+                } else {
+                    // Handle non-image content
+                    try {
+                        const parsedItem = parse(item);
+                        previewHTML += Template(parsedItem[0], {
+                            preview: true,
+                            theme: 'light'
+                        });
+                    } catch (error) {
+                        if (error instanceof Error) {
+                            previewHTML += ErrorTemplate(item + '\n' + error.message);
+                        } else {
+                            previewHTML += ErrorTemplate(item + '\n' + 'Erreur inconnue');
+                        }
+                    }
+                }
+
+
+                
+            });
+
+            // Create a temporary element to hold the previewHTML
+            const tempDiv = document.createElement('div');
+            tempDiv.innerHTML = previewHTML;
+            document.body.appendChild(tempDiv);
+
+            // Use html2canvas to capture the content
+            html2canvas(tempDiv).then(canvas => {
+                const imgData = canvas.toDataURL('image/png');
+                
+                // Obtenir les dimensions du canvas
+                const canvasWidth = canvas.width;
+                const canvasHeight = canvas.height;
+
+                // Convertir les dimensions du canvas en unités de mesure PDF (en mm)
+                const pdfWidth = (canvasWidth * 0.264583); // 1 px = 0.264583 mm
+                const pdfHeight = (canvasHeight * 0.264583);
+
+                // Ajouter l'image au PDF avec des dimensions dynamiques
+                pdf.addImage(imgData, 'PNG', 10, 10, pdfWidth, pdfHeight);
+                //  pdf.addImage(imgData, 'PNG', 10, 10, 150, 50); // Adjust dimensions as needed
+
+                pdf.save(`${selectedQuiz.title}.pdf`);
+                // Remove the temporary element
+                document.body.removeChild(tempDiv);
+            });
+        } catch (error) {
+            console.error('Error exporting selected quiz:', error);
+        }
+    };*/
+
+
+    const downloadPdfFile = async (quiz: QuizType) => {
+        try {
+            const selectedQuiz = await ApiService.getQuiz(quiz._id) as QuizType;
+            if (!selectedQuiz) {
+                throw new Error('Selected quiz not found');
+            }
+
+            let previewHTML = '';
+            const pdf = new jsPDF();
+            const pageMargin = 10; // Margin in mm
+            const yOffset = pageMargin;
+
+            // Create a temporary element to hold the previewHTML
+            const tempDiv = document.createElement('div');
+            document.body.appendChild(tempDiv);
+
+            for (const item of selectedQuiz.content) {
+                // Process each item
+                // ... (existing logic for processing items)
+                const isImage = item.includes('<img');
+                if (isImage) {
+                    const imageUrlMatch = item.match(/<img[^>]+src="([^">]+)"/);
+                    if (imageUrlMatch && imageUrlMatch[1]) {
+                        // Extract the URL and create an image element
+                        const imageUrl = imageUrlMatch[1];
+                        previewHTML += `<img style="width:10vw;" src="${imageUrl}">`;
+                    }
+                } else {
+                    // Handle non-image content
+                    try {
+                        const parsedItem = parse(item);
+                        previewHTML += Template(parsedItem[0], {
+                            preview: true,
+                            theme: 'light'
+                        });
+                    } catch (error) {
+                        if (error instanceof Error) {
+                            previewHTML += ErrorTemplate(item + '\n' + error.message);
+                        } else {
+                            previewHTML += ErrorTemplate(item + '\n' + 'Erreur inconnue');
+                        }
+                    }
+                }
+
+
+                // Add the processed item to the temporary div
+                const itemDiv = document.createElement('div');
+                itemDiv.innerHTML = previewHTML;
+                tempDiv.appendChild(itemDiv);
+
+                // Reset previewHTML for the next item
+                previewHTML = '';
+            }
+
+            // Use html2canvas to capture the content
+            html2canvas(tempDiv, {
+                onclone: (document) => {
+                    // Modify styles or perform actions on the cloned document if needed
+                }
+            }).then(canvas => {
+                const imgData = canvas.toDataURL('image/png');                
+                const canvasHeight = canvas.height;
+
+                // Convert canvas dimensions to PDF units (mm)
+                const pdfWidth = 200;
+                const pdfHeight = (canvasHeight * 0.264583);
+
+                // Add the image to the PDF, creating new pages as needed
+                let currentPageHeight = yOffset;
+                for (let y = 0; y < canvasHeight; y += pdf.internal.pageSize.height - (2 * pageMargin)) {
+                    if (currentPageHeight > pdf.internal.pageSize.height - pageMargin) {
+                        pdf.addPage();
+                        currentPageHeight = pageMargin;
+                    }
+                    pdf.addImage(imgData, 'PNG', pageMargin, currentPageHeight, pdfWidth - (2 * pageMargin), pdfHeight, undefined, 'FAST');
+                    currentPageHeight += pdf.internal.pageSize.height - (2 * pageMargin);
+                }
+
+                // Save the PDF after all items have been added
+                pdf.save(`${selectedQuiz.title}.pdf`);
+
+                // Remove the temporary element
+                document.body.removeChild(tempDiv);
+            });
+        } catch (error) {
+            console.error('Error exporting selected quiz:', error);
+        }
+    };
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
     const handleCreateFolder = async () => {
         try {
@@ -505,6 +685,12 @@ const Dashboard: React.FC = () => {
                                     color="primary"
                                     onClick={() => handleShareQuiz(quiz)}
                                 > <Share /> </IconButton>
+                            </Tooltip>
+                            <Tooltip title="Télécharger quiz" placement="top">
+                                <IconButton
+                                    color="primary"
+                                    onClick={() => downloadPdfFile(quiz)}
+                                > <FileDownload /> </IconButton>
                             </Tooltip>
                         </div>
                     </div>
